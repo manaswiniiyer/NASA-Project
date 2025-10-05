@@ -1,0 +1,19 @@
+{
+  "name": "pulse-of-the-ocean-webxr",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Immersive VR experience exploring ocean data from NASA",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.160.0",
+    "typescript": "^5.3.3",
+    "vite": "^7.1.9"
+  }
+}

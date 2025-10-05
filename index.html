@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pulse of the Ocean – VR Experience</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+    }
+    #app {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #controls {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: all;
+      background: rgba(0, 20, 40, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      min-width: 400px;
+    }
+    #controls h3 {
+      margin: 0 0 1rem 0;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #60a5fa;
+    }
+    #time-slider {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    #time-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-align: center;
+      display: block;
+    }
+    #vr-button {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      pointer-events: all;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #vr-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+    }
+    #info-panel {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      pointer-events: all;
+      background: rgba(0, 20, 40, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      max-width: 320px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #info-panel h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #info-panel p {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin: 0;
+    }
+    .data-source {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    
+    /* Narrative Panel */
+    #narrative-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: all;
+      background: rgba(0, 10, 30, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 2.5rem 3rem;
+      border-radius: 1.5rem;
+      max-width: 600px;
+      border: 2px solid rgba(96, 165, 250, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s, visibility 0.5s;
+      z-index: 100;
+    }
+    #narrative-panel.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    .narrative-theme {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #60a5fa;
+      margin-bottom: 0.5rem;
+    }
+    .narrative-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .narrative-text {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #e2e8f0;
+    }
+    
+    /* Hotspot Panel */
+    #hotspot-panel {
+      position: absolute;
+      top: 50%;
+      right: 2rem;
+      transform: translateY(-50%) translateX(120%);
+      pointer-events: all;
+      background: rgba(0, 20, 40, 0.95);
+      backdrop-filter: blur(15px);
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 380px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 50;
+    }
+    #hotspot-panel.visible {
+      transform: translateY(-50%) translateX(0);
+    }
+    .hotspot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .hotspot-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #60a5fa;
+      margin: 0;
+    }
+    #close-hotspot {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+    #close-hotspot:hover {
+      color: #fff;
+    }
+    .hotspot-description {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 1.5rem;
+    }
+    .hotspot-chart {
+      margin-top: 1rem;
+    }
+    .chart-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      height: 120px;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    .chart-bar {
+      flex: 1;
+      min-height: 2px;
+      border-radius: 2px;
+      transition: opacity 0.2s;
+      cursor: pointer;
+    }
+    .chart-bar:hover {
+      opacity: 0.8;
+    }
+    
+    /* Narrative Button */
+    #narrative-button {
+      position: absolute;
+      top: 2rem;
+      right: 10rem;
+      pointer-events: all;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #narrative-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+    }
+    
+    /* Instructions */
+    #instructions {
+      position: absolute;
+      bottom: 8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      background: rgba(0, 20, 40, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      animation: fadeInOut 3s ease-in-out infinite;
+    }
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="ui-overlay">
+      <!-- Top Bar -->
+      <button id="vr-button">Enter VR</button>
+      <button id="narrative-button">▶ Start Story</button>
+      
+      <!-- Info Panel -->
+      <div id="info-panel">
+        <h2>🌊 Pulse of the Ocean</h2>
+        <p>
+          Explore changing sea surface temperatures, coral bleaching trends, 
+          and rising sea levels through immersive data visualization.
+        </p>
+        <div class="data-source">
+          <strong>Data:</strong> NASA Earth Observations (NEO), MODIS/VIIRS SST
+        </div>
+      </div>
+
+      <!-- Time Controls -->
+      <div id="controls">
+        <h3>Time Travel</h3>
+        <input 
+          type="range" 
+          id="time-slider" 
+          min="0" 
+          max="11" 
+          value="0" 
+          step="1"
+        />
+        <span id="time-label">January 2024</span>
+      </div>
+
+      <!-- Instructions -->
+      <div id="instructions">
+        Click on glowing hotspots to explore ocean data 🎯
+      </div>
+
+      <!-- Narrative Panel (hidden by default) -->
+      <div id="narrative-panel">
+        <div class="narrative-theme"></div>
+        <h2 class="narrative-title"></h2>
+        <p class="narrative-text"></p>
+      </div>
+
+      <!-- Hotspot Detail Panel (hidden by default) -->
+      <div id="hotspot-panel">
+        <div class="hotspot-header">
+          <h3 class="hotspot-title"></h3>
+          <button id="close-hotspot">×</button>
+        </div>
+        <p class="hotspot-description"></p>
+        <div class="hotspot-chart"></div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
